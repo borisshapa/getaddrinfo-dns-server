@@ -1,0 +1,66 @@
+//
+// Created by borisshapa on 20.12.2019.
+//
+
+#ifndef SERVER_EPOLL_WRAPPER_H
+#define SERVER_EPOLL_WRAPPER_H
+
+
+#include <cstdint>
+#include <functional>
+#include "raii_fd.h"
+
+const int MAX_EVENTS_COUNT = 100;
+typedef std::function<void(uint32_t)> action_t;
+
+struct epoll_wrapper;
+struct epoll_registration;
+
+struct epoll_wrapper {
+    typedef std::function<void()> action_t;
+
+    epoll_wrapper();
+
+    ~epoll_wrapper() = default;
+
+    void run();
+
+private:
+    void epw_ctl(int action, int fd, epoll_registration *event, uint32_t flags);
+
+    void add(int fd, epoll_registration *event, uint32_t events);
+
+    void modify(int fd, epoll_registration *event, uint32_t events);
+
+    void remove(int fd);
+
+    raii_fd epoll_fd;
+
+    bool stopped;
+
+    friend struct epoll_registration;
+};
+
+struct epoll_registration {
+    typedef std::function<void(uint32_t)> callback_t;
+
+    epoll_registration(epoll_wrapper &epoll_w, int fd, uint32_t events, callback_t callback);
+
+    ~epoll_registration();
+
+    void modify(uint32_t new_events);
+
+    void clear();
+
+    epoll_wrapper &get_epoll() const;
+
+
+private:
+    epoll_wrapper *epoll_w;
+    int fd;
+    uint32_t events;
+    callback_t callback;
+    friend struct epoll_wrapper;
+};
+
+#endif //SERVER_EPOLL_WRAPPER_H
