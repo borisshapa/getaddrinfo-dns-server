@@ -33,8 +33,6 @@ struct echo_server {
 
     echo_server(epoll_wrapper &epoll_w, ipv4_endpoint const &local_endpoint);
 
-    ipv4_endpoint local_endpoint() const;
-
 private:
     void on_new_connection();
 

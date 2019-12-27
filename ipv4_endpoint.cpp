@@ -19,12 +19,6 @@ uint32_t ipv4_endpoint::address() const {
     return addr_net;
 }
 
-std::string ipv4_endpoint::to_string() const {
-    std::stringstream ss;
-    ss << *this;
-    return ss.str();
-}
-
 std::ostream& operator<<(std::ostream& os, ipv4_endpoint const& endpoint) {
     in_addr tmp{};
     tmp.s_addr = endpoint.address();

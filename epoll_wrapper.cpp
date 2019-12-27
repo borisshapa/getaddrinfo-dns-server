@@ -46,37 +46,37 @@ void epoll_wrapper::run() {
     }
 }
 
-void epoll_wrapper::epw_ctl(int action, int fd, epoll_registration *event,  uint32_t events) {
+void epoll_wrapper::epw_ctl(int action, int fd, epoll_registration *event) {
     epoll_event ep_event = {0, nullptr};
-    ep_event.data.ptr = event;
-    ep_event.events = events;
-
+    if (event) {
+        ep_event.data.ptr = event;
+        ep_event.events = event->events;
+    }
     int res = epoll_ctl(epoll_fd.get_fd(), action, fd, &ep_event);
     if (res == -1) {
         std::cerr << "Error in epoll_ctl: " + std::to_string(action) << std::endl;
     }
 }
 
-void epoll_wrapper::add(int fd, epoll_registration *event, uint32_t events) {
-    epw_ctl(EPOLL_CTL_ADD, fd, event, events);
+void epoll_wrapper::add(int fd, epoll_registration *event) {
+    epw_ctl(EPOLL_CTL_ADD, fd, event);
 };
 
 void epoll_wrapper::remove(int fd) {
-    epw_ctl(EPOLL_CTL_DEL, fd, nullptr, 0);
+    epw_ctl(EPOLL_CTL_DEL, fd, nullptr);
 }
 
-void epoll_wrapper::modify(int fd, epoll_registration *event, uint32_t events) {
-    epw_ctl(EPOLL_CTL_MOD, fd, event, events);
+void epoll_wrapper::modify(int fd, epoll_registration *event) {
+    epw_ctl(EPOLL_CTL_MOD, fd, event);
 }
 
 epoll_registration::epoll_registration(epoll_wrapper &epoll_w, int fd, uint32_t events,
-                                       epoll_registration::callback_t callback)
+                                       callback_t callback)
                                        : epoll_w(&epoll_w)
-                                       // TODO: CHECK
                                        , fd(fd)
                                        , events(events)
                                        , callback(std::move(callback)) {
-    epoll_w.add(fd, this, events);
+    epoll_w.add(fd, this);
 }
 
 epoll_wrapper &epoll_registration::get_epoll() const {
@@ -87,8 +87,8 @@ void epoll_registration::modify(uint32_t new_events) {
     if (events == new_events)
         return;
 
-    epoll_w->modify(fd, this, new_events);
     events = new_events;
+    epoll_w->modify(fd, this);
 }
 
 epoll_registration::~epoll_registration() {

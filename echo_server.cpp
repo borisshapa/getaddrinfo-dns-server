@@ -20,7 +20,7 @@ echo_server::connection::connection(echo_server *parent)
 
 bool echo_server::connection::process_read() {
     end_offset = sock.recv(buf, sizeof(buf));
-    // -1
+
     if (end_offset == 0) {
         sock.set_on_read_write([this] { process(); }, {});
         return false;
@@ -43,6 +43,8 @@ bool echo_server::connection::process_write() {
         sock.set_on_read_write([this] { process(); }, {});
         return false;
     }
+
+    return true;
 }
 
 void echo_server::connection::process() {

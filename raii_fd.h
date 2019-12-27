@@ -16,17 +16,13 @@ struct raii_fd {
 
     raii_fd(raii_fd const &other) = delete;
 
-    raii_fd(raii_fd &&other);
+    raii_fd(raii_fd &&other) noexcept;
 
-    raii_fd &operator=(raii_fd &&rhs);
+    raii_fd &operator=(raii_fd &&rhs) noexcept;
 
     ~raii_fd();
 
     int get_fd() const;
-
-    ssize_t read(void *buf, size_t count);
-
-    ssize_t write(void const *buf, size_t count);
 
     bool valid_existing() const;
 

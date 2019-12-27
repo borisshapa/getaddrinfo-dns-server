@@ -13,15 +13,13 @@
 #include "ipv4_endpoint.h"
 
 struct socket {
+    socket();
+
     socket(raii_fd &&fd);
 
     socket(int fd);
 
     ~socket() = default;
-
-    static int create_socket(int domain, int type);
-
-    void bind_listen(uint32_t address, uint16_t port);
 
     int get_fd() const;
 
@@ -29,7 +27,7 @@ struct socket {
 
     ssize_t send(void *buf, size_t count);
 
-private:
+protected:
     raii_fd fd;
 };
 
@@ -41,10 +39,6 @@ struct client_socket : public socket {
                   on_ready_t on_write_ready);
 
     ~client_socket();
-
-    void set_on_read(on_ready_t on_read_ready);
-
-    void set_on_write(on_ready_t on_write_ready);
 
     void set_on_read_write(on_ready_t on_read_ready, on_ready_t on_write_ready);
 
@@ -65,6 +59,8 @@ struct server_socket : public socket {
     server_socket(epoll_wrapper &epoll_w, ipv4_endpoint local_endpoint, on_connected_t on_connected);
 
     ~server_socket() = default;
+
+    void bind_listen(uint32_t address, uint16_t port);
 
     client_socket accept(client_socket::on_ready_t on_disconnect,
                          client_socket::on_ready_t on_read_ready,

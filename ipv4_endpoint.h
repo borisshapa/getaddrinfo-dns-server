@@ -16,8 +16,6 @@ struct ipv4_endpoint {
 
     uint32_t address() const;
 
-    std::string to_string() const;
-
     friend std::ostream &operator<<(std::ostream& os, ipv4_endpoint const& endpoint);
 
 private:

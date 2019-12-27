@@ -10,15 +10,12 @@
 #include <functional>
 #include "raii_fd.h"
 
-const int MAX_EVENTS_COUNT = 100;
-typedef std::function<void(uint32_t)> action_t;
+const int MAX_EVENTS_COUNT = 128;
 
 struct epoll_wrapper;
 struct epoll_registration;
 
 struct epoll_wrapper {
-    typedef std::function<void()> action_t;
-
     epoll_wrapper();
 
     ~epoll_wrapper() = default;
@@ -26,11 +23,11 @@ struct epoll_wrapper {
     void run();
 
 private:
-    void epw_ctl(int action, int fd, epoll_registration *event, uint32_t flags);
+    void epw_ctl(int action, int fd, epoll_registration *event);
 
-    void add(int fd, epoll_registration *event, uint32_t events);
+    void add(int fd, epoll_registration *event);
 
-    void modify(int fd, epoll_registration *event, uint32_t events);
+    void modify(int fd, epoll_registration *event);
 
     void remove(int fd);
 
@@ -49,8 +46,6 @@ struct epoll_registration {
     ~epoll_registration();
 
     void modify(uint32_t new_events);
-
-    void clear();
 
     epoll_wrapper &get_epoll() const;
 
