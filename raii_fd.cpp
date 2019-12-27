@@ -51,10 +51,12 @@ bool raii_fd::valid_existing() const{
 
 raii_fd::raii_fd(raii_fd &&other) noexcept {
     swap(*this, other);
+    other.fd = -1;
 }
 
 raii_fd &raii_fd::operator=(raii_fd &&rhs) noexcept {
     swap(*this, rhs);
+    rhs.fd = -1;
     return *this;
 }
 
