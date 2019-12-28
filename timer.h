@@ -34,16 +34,14 @@ struct timer_element
     typedef std::function<void ()> callback_t;
 
     timer_element();
-    timer_element(callback_t callback);
+    explicit timer_element(callback_t callback);
     timer_element(timer& timer, clock_t::duration interval, callback_t callback_);
     timer_element(timer& timer, clock_t::time_point wakeup, callback_t callback_);
     timer_element(timer_element const&) = delete;
     timer_element& operator=(timer_element const&) = delete;
     ~timer_element();
 
-    void set_callback(callback_t callback);
     void restart(timer& t, clock_t::duration interval);
-    void restart(timer& t, clock_t::time_point wakeup_);
 
 private:
     timer* t;

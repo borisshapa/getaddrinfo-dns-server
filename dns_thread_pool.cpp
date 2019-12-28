@@ -9,6 +9,7 @@
 #include <strings.h>
 #include <iostream>
 #include <arpa/inet.h>
+#include <csignal>
 
 dns_thread_pool::dns_thread_pool(size_t threads_count)
         : finished(false) {
@@ -19,16 +20,18 @@ dns_thread_pool::dns_thread_pool(size_t threads_count)
 
 dns_thread_pool::~dns_thread_pool() {
     finished = true;
+    for (auto &thread : resolvers) {
+        kill(thread.native_handle(), SIGTERM);
+    }
     cv.notify_all();
+
     for (auto &thread : resolvers) {
         thread.join();
     }
 }
 
 dns_thread_pool::request::request(std::string hostname, size_t id, callback_t callback)
-        : hostname(std::move(hostname))
-        , id(id)
-        , callback(std::move(callback)) {}
+        : hostname(std::move(hostname)), id(id), callback(std::move(callback)) {}
 
 void dns_thread_pool::resolve(std::string const &hostname, size_t id, callback_t callback) {
     std::unique_lock<std::mutex> lg(m_req);
@@ -40,7 +43,7 @@ void dns_thread_pool::resolve(std::string const &hostname, size_t id, callback_t
 std::string dns_thread_pool::get_response(size_t id) {
     std::unique_lock<std::mutex> lg(m_resp);
     std::string res;
-    for (auto const& address : resp[id]) {
+    for (auto const &address : resp[id]) {
         res += std::string(inet_ntoa(address)) + "\n";
     }
     resp[id].clear();
@@ -77,7 +80,7 @@ void dns_thread_pool::resolver() {
         int res = ::getaddrinfo(hostname.c_str(), port.c_str(), &hints, &result);
         if (res == 0) {
             std::unique_lock<std::mutex> result_lg(m_resp);
-            for (addrinfo* ai = result;  ai != nullptr; ai = ai->ai_next) {
+            for (addrinfo *ai = result; ai != nullptr; ai = ai->ai_next) {
                 resp[request->id].push_back(reinterpret_cast<sockaddr_in *>(ai->ai_addr)->sin_addr);
             }
             request->callback();

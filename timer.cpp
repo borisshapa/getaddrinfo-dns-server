@@ -63,22 +63,11 @@ timer_element::~timer_element() {
     }
 }
 
-void timer_element::set_callback(timer_element::callback_t callback_) {
-    this->callback = std::move(callback_);
-}
-
 void timer_element::restart(timer &timer, clock_t::duration interval) {
     if (this->t) {
         this->t->remove(this);
     }
     this->t = &timer;
     this->wakeup = clock_t::now() + interval;
-    this->t->add(this);
-}
-
-void timer_element::restart(timer &timer, clock_t::time_point wakeup_) {
-    this->t->remove(this);
-    this->t = &timer;
-    this->wakeup = wakeup_;
     this->t->add(this);
 }
