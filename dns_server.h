@@ -13,6 +13,9 @@
 #include "socket.h"
 #include "dns_thread_pool.h"
 
+#define KB 1024
+#define MB 1024 * KB
+
 struct dns_server {
     struct connection {
         connection(dns_server *parent);
@@ -23,14 +26,18 @@ struct dns_server {
 
         bool process_write();
 
+        void disconnect();
+
     private:
         timer_element timer_elem;
         size_t id;
         dns_server *parent;
         client_socket sock;
-        size_t start_offset;
         size_t end_offset;
         char buf[1024];
+
+        std::string cache;
+        std::string cache_w;
     };
 
     dns_server(epoll_wrapper &epoll_w, ipv4_endpoint const &local_endpoint);

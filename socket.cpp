@@ -84,8 +84,7 @@ client_socket::client_socket(epoll_wrapper &epoll_w,
                              on_ready_t on_read_ready,
                              on_ready_t on_write_ready)
         : socket(std::move(fd)), on_disconnect(std::move(on_disconnect)), on_read_ready(std::move(on_read_ready)),
-          on_write_ready(std::move(on_write_ready)), ep_reg(
-                  epoll_w,
+          on_write_ready(std::move(on_write_ready)), ep_reg(epoll_w,
                 get_fd(),
                 calculate_flags(),
                 [this](uint32_t events) {

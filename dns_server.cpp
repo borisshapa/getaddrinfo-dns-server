@@ -18,7 +18,6 @@ dns_server::connection::connection(dns_server *parent)
                 [this] { process(); },
                 // on_write
                 {}))
-        , start_offset()
         , end_offset()
         , buf()
         , id(parent->hash_fn(this))
@@ -26,16 +25,36 @@ dns_server::connection::connection(dns_server *parent)
             this->parent->connections.erase(this);
         }){}
 
-bool dns_server::connection::process_read() {
-    end_offset = sock.recv(buf, sizeof(buf));
+void dns_server::connection::disconnect() {
+    parent->connections.erase(this);
+}
 
-    for (size_t i = 0; i < end_offset - 1; i++) {
-        if (std::string(buf + i, buf + i + 2) == "\r\n") {
-            std::string hostname(buf, buf + i);
+bool dns_server::connection::process_read() {
+    size_t count = sock.recv(buf, sizeof(buf));
+
+    size_t start_offset = cache.size();
+    cache += std::string(buf, buf + count);
+    if (cache.size() > 64 * MB) {
+        disconnect();
+    }
+
+    size_t offset = 0;
+    start_offset = (start_offset == 0) ? 0 : start_offset - 1;
+    for (size_t i = start_offset; i < cache.size() - 1; i++) {
+        std::string window = cache.substr(i, 2);
+        if (window == "\r\n") {
+            std::string hostname(cache.data() + offset, cache.data() + i);
             parent->tp.resolve(hostname, id, [this] {
                 sock.set_on_read_write({}, [this] { process_write(); });
             });
+            offset = i + 2;
         }
+    }
+
+    if (offset != cache.size()) {
+        cache = cache.substr(offset);
+    } else {
+        cache.clear();
     }
 
     if (end_offset == 0) {
@@ -46,13 +65,23 @@ bool dns_server::connection::process_read() {
 }
 
 bool dns_server::connection::process_write() {
-    std::string res = parent->tp.get_response(id);
-    int count = sock.send(const_cast<char *>(res.c_str()), res.size());
+    cache_w += parent->tp.get_response(id);
+    int count = sock.send(const_cast<char *>(cache_w.c_str()), cache_w.size());
 
-    timer_elem.restart(parent->epoll_w.get_timer(), timeout);
-    if (res.size() != count) {
+    if (cache_w.size() > 64 * MB) {
+        disconnect();
+    }
+
+    if (count > 0) {
+        timer_elem.restart(parent->epoll_w.get_timer(), timeout);
+    }
+
+    if (count < cache_w.size()) {
+        cache_w.substr(count);
         sock.set_on_read_write({}, [this] { process_write(); });
         return false;
+    } else {
+        cache_w.clear();
     }
 
     if (end_offset != sizeof(buf)) {
