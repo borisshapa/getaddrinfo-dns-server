@@ -12,7 +12,7 @@ epoll_wrapper::epoll_wrapper()
         : stopped(false)
         , epoll_fd(epoll_create(1)) {
     if (!epoll_fd.valid_existing()) {
-        std::cerr << "Can't create epoll file descriptor." << std::endl;
+        throw std::runtime_error("Can't create epoll file descriptor.");
     }
 }
 
@@ -29,7 +29,7 @@ void epoll_wrapper::run() {
         int res = epoll_wait(epoll_fd.get_fd(), events, MAX_EVENTS_COUNT, timeout);
         if (res == -1) {
             if (errno != EINTR) {
-                std::cerr << "Error in epoll_wait.";
+                throw std::runtime_error("Error in epoll_wait.");
             } else {
                 break;
             }
@@ -54,7 +54,7 @@ void epoll_wrapper::epw_ctl(int action, int fd, epoll_registration *event) {
     }
     int res = epoll_ctl(epoll_fd.get_fd(), action, fd, &ep_event);
     if (res == -1) {
-        std::cerr << "Error in epoll_ctl: " + std::to_string(action) << std::endl;
+        throw std::runtime_error("Error in epoll_ctl: " + std::to_string(action) + ".");
     }
 }
 

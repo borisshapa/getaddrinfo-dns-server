@@ -9,9 +9,9 @@
 
 socket::socket() {
     int res = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-    std::cerr << res << std::endl;
+    std::cerr << "Open socket " << res << std::endl;
     if (res == -1) {
-        std::cerr << "Can't create socket." << std::endl;
+        throw std::runtime_error("Can't create socket.");
     }
     fd = res;
 }
@@ -53,26 +53,25 @@ void server_socket::bind_listen(uint32_t address, uint16_t port) {
     int opt = 1;
     int res = ::setsockopt(get_fd(), SOL_SOCKET, SO_REUSEADDR, &opt, sizeof opt);
     if (res < 0) {
-        std::cerr << "set sockopt";
+        throw std::runtime_error("Error in set sockopt.");
     }
 
     res = ::bind(get_fd(), reinterpret_cast<sockaddr const *>(&saddr), sizeof(saddr));
     if (res == -1) {
-        std::cerr << "Error during bind." << std::endl;
+        throw std::runtime_error("Error in bind.");
     }
 
     res = ::listen(get_fd(), SOMAXCONN);
     if (res == -1) {
-        std::cerr << "Error during listen.";
+        throw std::runtime_error("Error in listen.");
     }
 }
 
 client_socket server_socket::accept(client_socket::on_ready_t on_disconnect, client_socket::on_ready_t on_read_ready,
                                     client_socket::on_ready_t on_write_ready) const {
     int res = ::accept(get_fd(), nullptr, nullptr);
-    std::cerr << res << std::endl;
     if (res == -1) {
-        std::cerr << "Error in accept." << std::endl;
+        throw std::runtime_error("Error in accept.");
     }
     return client_socket(ep_reg.get_epoll(),
                          std::move(raii_fd(res)),

@@ -16,9 +16,10 @@ raii_fd::raii_fd(int fd) : fd(fd) {}
 
 raii_fd::~raii_fd() {
     if (fd != -1) {
+        std::cerr << "Close socket " << fd << std::endl;
         int res = close(fd);
         if (res == -1) {
-            std::cerr << "Can't close file descriptor " + std::to_string(fd) << std::endl;
+            throw std::runtime_error("Can't close file descriptor " + std::to_string(fd) + ".");
         }
         fd = -1;
     }
@@ -37,11 +38,11 @@ raii_fd raii_fd::signal_fd(const std::vector<uint8_t>& signals) {
 
     int proc_mask = sigprocmask(SIG_BLOCK, &mask, nullptr);
     if (proc_mask == -1) {
-        std::cerr << "Can't create sigprocmask during creating signal_fd." << std::endl;
+        throw std::runtime_error("Can't create sigprocmask during creating signal_fd.");
     }
     raii_fd res = signalfd(-1, &mask, 0);
     if (!res.valid_existing()) {
-        std::cerr << "Can't create signalfd." << std::endl;
+        throw std::runtime_error("Can't create signalfd.");
     }
     return res;
 }

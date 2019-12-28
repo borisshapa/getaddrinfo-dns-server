@@ -31,8 +31,6 @@ struct dns_thread_pool {
 
     std::string get_response(size_t id);
 
-    bool is_ready(size_t id);
-
     struct request {
         request(std::string hostname, size_t id, callback_t callback);
 

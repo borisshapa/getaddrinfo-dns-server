@@ -31,7 +31,6 @@ dns_thread_pool::request::request(std::string hostname, size_t id, callback_t ca
         , callback(std::move(callback)) {}
 
 void dns_thread_pool::resolve(std::string const &hostname, size_t id, callback_t callback) {
-    std::cerr << id << '\n';
     std::unique_lock<std::mutex> lg(m_req);
     req_q.push(new request(hostname, id, std::move(callback)));
     req_counts[id]++;
@@ -45,7 +44,6 @@ std::string dns_thread_pool::get_response(size_t id) {
         res += std::string(inet_ntoa(address)) + "\n";
     }
     resp[id].clear();
-    std::cerr << res << '\n';
     return res;
 }
 
@@ -77,7 +75,6 @@ void dns_thread_pool::resolver() {
         hints.ai_socktype = SOCK_STREAM;
 
         int res = ::getaddrinfo(hostname.c_str(), port.c_str(), &hints, &result);
-        std::cerr << hostname << ' ' << port << ' ' << res << '\n';
         if (res == 0) {
             std::unique_lock<std::mutex> result_lg(m_resp);
             for (addrinfo* ai = result;  ai != nullptr; ai = ai->ai_next) {
@@ -87,8 +84,4 @@ void dns_thread_pool::resolver() {
         }
         freeaddrinfo(result);
     }
-}
-
-bool dns_thread_pool::is_ready(size_t id) {
-    return req_counts[id] == 0;
 }

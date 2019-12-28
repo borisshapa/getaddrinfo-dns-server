@@ -14,3 +14,5 @@ add_executable(server
         ipv4_endpoint.cpp ipv4_endpoint.h
         dns_thread_pool.cpp dns_thread_pool.h
         dns_server.cpp dns_server.h timer.cpp timer.h)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=leak -g")
