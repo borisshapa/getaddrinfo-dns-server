@@ -9,8 +9,7 @@
 #include "epoll_wrapper.h"
 
 epoll_wrapper::epoll_wrapper()
-        : stopped(false)
-        , epoll_fd(epoll_create(1)) {
+        : stopped(false), epoll_fd(epoll_create(1)) {
     if (!epoll_fd.valid_existing()) {
         throw std::runtime_error("Can't create epoll file descriptor.");
     }
@@ -35,12 +34,8 @@ void epoll_wrapper::run() {
             }
         } else {
             for (size_t i = 0; i < res; i++) {
-                auto const & event = events[i];
-                try {
-                    static_cast<epoll_registration *>(event.data.ptr)->callback(event.events);
-                } catch (std::exception const &e) {
-                    std::cerr << "Error: " << e.what() << std::endl;
-                }
+                auto const &event = events[i];
+                static_cast<epoll_registration *>(event.data.ptr)->callback(event.events);
             }
         }
     }
@@ -72,10 +67,7 @@ void epoll_wrapper::modify(int fd, epoll_registration *event) {
 
 epoll_registration::epoll_registration(epoll_wrapper &epoll_w, int fd, uint32_t events,
                                        callback_t callback)
-                                       : epoll_w(&epoll_w)
-                                       , fd(fd)
-                                       , events(events)
-                                       , callback(std::move(callback)) {
+        : epoll_w(&epoll_w), fd(fd), events(events), callback(std::move(callback)) {
     epoll_w.add(fd, this);
 }
 
@@ -100,7 +92,7 @@ epoll_registration::~epoll_registration() {
     }
 }
 
-timer& epoll_wrapper::get_timer() {
+timer &epoll_wrapper::get_timer() {
     return timer_;
 }
 
