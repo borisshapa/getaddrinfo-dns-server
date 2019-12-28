@@ -19,7 +19,7 @@ raii_fd::~raii_fd() {
         std::cerr << "Close socket " << fd << std::endl;
         int res = close(fd);
         if (res == -1) {
-            throw std::runtime_error("Can't close file descriptor " + std::to_string(fd) + ".");
+            std::cerr << "Can't close file descriptor " + std::to_string(fd) + "." << std::endl;
         }
         fd = -1;
     }

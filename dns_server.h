@@ -15,7 +15,7 @@
 
 struct dns_server {
     struct connection {
-        connection(dns_server *parent, size_t id);
+        connection(dns_server *parent);
 
         void process();
 
@@ -41,8 +41,8 @@ private:
     epoll_wrapper &epoll_w;
     server_socket sock;
     std::map<connection *, std::unique_ptr<connection>> connections;
-    size_t ids = 0;
     dns_thread_pool tp;
+    std::hash<connection *> hash_fn;
 };
 
 

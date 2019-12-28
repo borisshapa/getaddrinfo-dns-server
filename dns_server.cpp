@@ -9,7 +9,7 @@ namespace
     constexpr const timer::clock_t::duration timeout = std::chrono::seconds(15);
 }
 
-dns_server::connection::connection(dns_server *parent, size_t id)
+dns_server::connection::connection(dns_server *parent)
         : parent(parent)
         , sock(parent->sock.accept(
                 // on_disconnect
@@ -21,7 +21,7 @@ dns_server::connection::connection(dns_server *parent, size_t id)
         , start_offset()
         , end_offset()
         , buf()
-        , id(id)
+        , id(parent->hash_fn(this))
         , timer_elem(parent->epoll_w.get_timer(), timeout, [this] {
             this->parent->connections.erase(this);
         }){}
@@ -80,6 +80,6 @@ dns_server::dns_server(epoll_wrapper &epoll_w, ipv4_endpoint const &local_endpoi
         , tp(4) {}
 
 void dns_server::on_new_connection() {
-    std::unique_ptr<connection> new_conn(new connection(this, ids++));
+    std::unique_ptr<connection> new_conn(new connection(this));
     connections.emplace(new_conn.get(), std::move(new_conn));
 }
