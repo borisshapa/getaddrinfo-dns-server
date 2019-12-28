@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sys/signalfd.h>
 #include <csignal>
+#include <sys/socket.h>
 #include "raii_fd.h"
 
 raii_fd::raii_fd() : fd(-1) {}
@@ -62,4 +63,12 @@ raii_fd &raii_fd::operator=(raii_fd &&rhs) noexcept {
 
 void swap(raii_fd &a, raii_fd &b) {
     std::swap(a.fd, b.fd);
+}
+
+ssize_t raii_fd::recv(void *buf, size_t count) {
+    return ::recv(get_fd(), buf, count, 0);
+}
+
+ssize_t raii_fd::send(void *buf, size_t count) {
+    return ::send(get_fd(), buf, count, 0);
 }

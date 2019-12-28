@@ -28,6 +28,10 @@ struct raii_fd {
 
     static raii_fd signal_fd(const std::vector<uint8_t> &signals);
 
+    ssize_t recv(void *buf, size_t count);
+
+    ssize_t send(void *buf, size_t count);
+
     friend void swap(raii_fd &a, raii_fd &b);
 
 private:
