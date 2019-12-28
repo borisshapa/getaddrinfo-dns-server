@@ -20,7 +20,7 @@ socket::socket(raii_fd &&fd)
         : fd(std::move(fd)) {}
 
 socket::socket(int fd)
-    : fd(fd) {}
+        : fd(fd) {}
 
 int socket::get_fd() const {
     return fd.get_fd();
@@ -36,11 +36,9 @@ ssize_t socket::send(void *buf, size_t count) {
 
 server_socket::server_socket(epoll_wrapper &epoll_w, ipv4_endpoint local_endpoint,
                              server_socket::on_connected_t on_connected)
-        : socket()
-        , on_connected(std::move(on_connected))
-        , ep_reg(epoll_w, get_fd(), EPOLLIN, [this](uint32_t) {
-            this->on_connected();
-        }) {
+        : socket(), on_connected(std::move(on_connected)), ep_reg(epoll_w, get_fd(), EPOLLIN, [this](uint32_t) {
+    this->on_connected();
+}) {
     bind_listen(local_endpoint.address(), local_endpoint.port());
 }
 
@@ -69,7 +67,7 @@ void server_socket::bind_listen(uint32_t address, uint16_t port) {
 
 client_socket server_socket::accept(client_socket::on_ready_t on_disconnect, client_socket::on_ready_t on_read_ready,
                                     client_socket::on_ready_t on_write_ready) const {
-    int res = ::accept4(get_fd(), nullptr, nullptr,SOCK_NONBLOCK | SOCK_CLOEXEC);
+    int res = ::accept4(get_fd(), nullptr, nullptr, SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (res == -1) {
         throw std::runtime_error("Error in accept.");
     }
@@ -81,44 +79,38 @@ client_socket server_socket::accept(client_socket::on_ready_t on_disconnect, cli
 }
 
 client_socket::client_socket(epoll_wrapper &epoll_w,
-                            raii_fd &&fd,
-                            on_ready_t on_disconnect,
-                            on_ready_t on_read_ready,
-                            on_ready_t on_write_ready)
-        : socket(std::move(fd))
-        , on_disconnect(std::move(on_disconnect))
-        , on_read_ready(std::move(on_read_ready))
-        , on_write_ready(std::move(on_write_ready))
-        , ep_reg(epoll_w,
+                             raii_fd &&fd,
+                             on_ready_t on_disconnect,
+                             on_ready_t on_read_ready,
+                             on_ready_t on_write_ready)
+        : socket(std::move(fd)), on_disconnect(std::move(on_disconnect)), on_read_ready(std::move(on_read_ready)),
+          on_write_ready(std::move(on_write_ready)), ep_reg(
+                  epoll_w,
                 get_fd(),
                 calculate_flags(),
                 [this](uint32_t events) {
                     bool is_destroed = false;
                     destroyed = &is_destroed;
-                    try {
-                        if ((events & EPOLLRDHUP) || (events & EPOLLERR) || (events & EPOLLHUP)) {
-                            this->on_disconnect();
-                            if (is_destroed) {
-                                return;
-                            }
+                    if ((events & EPOLLRDHUP) || (events & EPOLLERR) ||
+                        (events & EPOLLHUP)) {
+                        this->on_disconnect();
+                        if (is_destroed) {
+                            return;
                         }
+                    }
 
-                        if (events & EPOLLIN) {
-                            this->on_read_ready();
-                            if (is_destroed) {
-                                return;
-                            }
+                    if (events & EPOLLIN) {
+                        this->on_read_ready();
+                        if (is_destroed) {
+                            return;
                         }
+                    }
 
-                        if (events & EPOLLOUT) {
-                            this->on_write_ready();
-                            if (is_destroed) {
-                                return;
-                            }
+                    if (events & EPOLLOUT) {
+                        this->on_write_ready();
+                        if (is_destroed) {
+                            return;
                         }
-                    } catch (...) {
-                        destroyed = nullptr;
-                        throw;
                     }
                     destroyed = nullptr;
                 }), destroyed(nullptr) {}
