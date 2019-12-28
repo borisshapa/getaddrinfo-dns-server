@@ -7,37 +7,37 @@
 #include <cassert>
 #include <iostream>
 
-void timer::add(timer_element *e) {
-    queue.insert(value_t(e->wakeup, e));
+void timer::add(timer_element *time_elem) {
+    priority_queue.insert(value_t(time_elem->wakeup, time_elem));
 }
 
-void timer::remove(timer_element *e) {
-    auto i = queue.find(value_t(e->wakeup, e));
-    queue.erase(i);
+void timer::remove(timer_element *time_elem) {
+    auto i = priority_queue.find(value_t(time_elem->wakeup, time_elem));
+    priority_queue.erase(i);
 }
 
 bool timer::empty() const {
-    return queue.empty();
+    return priority_queue.empty();
 }
 
 timer::clock_t::time_point timer::top() const {
-    return queue.begin()->first;
+    return priority_queue.begin()->first;
 }
 
 void timer::notify(clock_t::time_point now) {
     while (true) {
-        if (queue.empty()) {
+        if (priority_queue.empty()) {
             break;
         }
 
-        auto i = queue.begin();
+        auto i = priority_queue.begin();
         if (i->first > now) {
             break;
         }
 
         i->second->t = nullptr;
         i->second->callback();
-        queue.erase(i);
+        priority_queue.erase(i);
     }
 }
 
@@ -71,3 +71,4 @@ void timer_element::restart(timer &timer, clock_t::duration interval) {
     this->wakeup = clock_t::now() + interval;
     this->t->add(this);
 }
+

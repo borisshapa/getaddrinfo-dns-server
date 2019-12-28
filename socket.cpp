@@ -69,7 +69,7 @@ void server_socket::bind_listen(uint32_t address, uint16_t port) {
 
 client_socket server_socket::accept(client_socket::on_ready_t on_disconnect, client_socket::on_ready_t on_read_ready,
                                     client_socket::on_ready_t on_write_ready) const {
-    int res = ::accept(get_fd(), nullptr, nullptr);
+    int res = ::accept4(get_fd(), nullptr, nullptr,SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (res == -1) {
         throw std::runtime_error("Error in accept.");
     }

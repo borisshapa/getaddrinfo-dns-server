@@ -16,8 +16,8 @@ struct timer
 {
     typedef std::chrono::steady_clock clock_t;
 
-    void add(timer_element* e);
-    void remove(timer_element* e);
+    void add(timer_element* time_elem);
+    void remove(timer_element* time_elem);
 
     bool empty() const;
     clock_t::time_point top() const;
@@ -25,7 +25,7 @@ struct timer
 
 private:
     typedef std::pair<clock_t::time_point, timer_element*> value_t;
-    std::set<value_t> queue;
+    std::set<value_t> priority_queue;
 };
 
 struct timer_element

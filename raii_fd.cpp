@@ -40,7 +40,7 @@ raii_fd raii_fd::signal_fd(const std::vector<uint8_t>& signals) {
     if (proc_mask == -1) {
         throw std::runtime_error("Can't create sigprocmask during creating signal_fd.");
     }
-    raii_fd res = signalfd(-1, &mask, 0);
+    raii_fd res = signalfd(-1, &mask, SFD_NONBLOCK | SFD_CLOEXEC);
     if (!res.valid_existing()) {
         throw std::runtime_error("Can't create signalfd.");
     }
