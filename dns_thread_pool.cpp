@@ -84,7 +84,7 @@ void dns_thread_pool::resolver() {
                 resp[request->id].push_back(reinterpret_cast<sockaddr_in *>(ai->ai_addr)->sin_addr);
             }
             request->callback();
+            freeaddrinfo(result);
         }
-        freeaddrinfo(result);
     }
 }
