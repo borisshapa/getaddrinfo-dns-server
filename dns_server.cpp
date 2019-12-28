@@ -28,42 +28,39 @@ dns_server::connection::connection(dns_server *parent)
 
 bool dns_server::connection::process_read() {
     end_offset = sock.recv(buf, sizeof(buf));
-    bool ret = true;
 
     for (size_t i = 0; i < end_offset - 1; i++) {
         if (std::string(buf + i, buf + i + 2) == "\r\n") {
             std::string hostname(buf, buf + i);
-            parent->tp.resolve(hostname, id, [this, &ret] {
+            parent->tp.resolve(hostname, id, [this] {
                 sock.set_on_read_write({}, [this] { process_write(); });
-                ret = false;
             });
         }
     }
 
     if (end_offset == 0) {
         sock.set_on_read_write([this] { process(); }, {});
-        ret = false;
+        return false;
     }
-    return ret;
+    return true;
 }
 
 bool dns_server::connection::process_write() {
-    bool ret = true;
     std::string res = parent->tp.get_response(id);
     int count = sock.send(const_cast<char *>(res.c_str()), res.size());
 
     timer_elem.restart(parent->epoll_w.get_timer(), timeout);
     if (res.size() != count) {
         sock.set_on_read_write({}, [this] { process_write(); });
-        ret = false;
+        return false;
     }
 
     if (end_offset != sizeof(buf)) {
         sock.set_on_read_write([this] { process(); }, {});
-        ret = false;
+        return false;
     }
 
-    return ret;
+    return true;
 }
 
 void dns_server::connection::process() {
