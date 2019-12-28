@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <functional>
 #include "raii_fd.h"
+#include "timer.h"
 
 const int MAX_EVENTS_COUNT = 128;
 
@@ -22,6 +23,7 @@ struct epoll_wrapper {
 
     void run();
 
+    timer& get_timer();
 private:
     void epw_ctl(int action, int fd, epoll_registration *event);
 
@@ -31,7 +33,11 @@ private:
 
     void remove(int fd);
 
+    int run_timers_calculate_timeout();
+
     raii_fd epoll_fd;
+
+    timer timer_;
 
     bool stopped;
 

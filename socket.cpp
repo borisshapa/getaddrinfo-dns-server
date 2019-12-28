@@ -93,7 +93,6 @@ client_socket::client_socket(epoll_wrapper &epoll_w,
         , ep_reg(epoll_w,
                 get_fd(),
                 calculate_flags(),
-                // TODO: WHY IS DESTROED?
                 [this](uint32_t events) {
                     bool is_destroed = false;
                     destroyed = &is_destroed;

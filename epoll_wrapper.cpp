@@ -25,9 +25,9 @@ void epoll_wrapper::run() {
 
     epoll_event events[MAX_EVENTS_COUNT];
     while (!stopped) {
-        int res = epoll_wait(epoll_fd.get_fd(), events, MAX_EVENTS_COUNT, -1);
+        int timeout = run_timers_calculate_timeout();
+        int res = epoll_wait(epoll_fd.get_fd(), events, MAX_EVENTS_COUNT, timeout);
         if (res == -1) {
-            // TODO: What is it?
             if (errno != EINTR) {
                 std::cerr << "Error in epoll_wait.";
             } else {
@@ -98,4 +98,23 @@ epoll_registration::~epoll_registration() {
         fd = -1;
         events = 0;
     }
+}
+
+timer& epoll_wrapper::get_timer() {
+    return timer_;
+}
+
+int epoll_wrapper::run_timers_calculate_timeout() {
+    if (timer_.empty()) {
+        return -1;
+    }
+
+    auto now = timer::clock_t::now();
+    timer_.notify(now);
+
+    if (timer_.empty()) {
+        return -1;
+    }
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(timer_.top() - now).count();
 }

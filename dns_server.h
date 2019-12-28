@@ -24,6 +24,7 @@ struct dns_server {
         bool process_write();
 
     private:
+        timer_element timer_elem;
         size_t id;
         dns_server *parent;
         client_socket sock;
@@ -40,7 +41,7 @@ private:
     epoll_wrapper &epoll_w;
     server_socket sock;
     std::map<connection *, std::unique_ptr<connection>> connections;
-    std::queue<connection*> ids;
+    size_t ids = 0;
     dns_thread_pool tp;
 };
 

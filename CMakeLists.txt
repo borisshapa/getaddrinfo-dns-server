@@ -13,5 +13,4 @@ add_executable(server
         echo_server.cpp echo_server.h
         ipv4_endpoint.cpp ipv4_endpoint.h
         dns_thread_pool.cpp dns_thread_pool.h
-        event_handler.cpp event_handler.h
-        dns_server.cpp dns_server.h)
+        dns_server.cpp dns_server.h timer.cpp timer.h)

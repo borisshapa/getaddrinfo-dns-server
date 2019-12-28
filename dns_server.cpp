@@ -4,6 +4,11 @@
 
 #include "dns_server.h"
 
+namespace
+{
+    constexpr const timer::clock_t::duration timeout = std::chrono::seconds(15);
+}
+
 dns_server::connection::connection(dns_server *parent, size_t id)
         : parent(parent)
         , sock(parent->sock.accept(
@@ -16,7 +21,10 @@ dns_server::connection::connection(dns_server *parent, size_t id)
         , start_offset()
         , end_offset()
         , buf()
-        , id(id) {}
+        , id(id)
+        , timer_elem(parent->epoll_w.get_timer(), timeout, [this] {
+            this->parent->connections.erase(this);
+        }){}
 
 bool dns_server::connection::process_read() {
     end_offset = sock.recv(buf, sizeof(buf));
@@ -44,6 +52,7 @@ bool dns_server::connection::process_write() {
     std::string res = parent->tp.get_response(id);
     int count = sock.send(const_cast<char *>(res.c_str()), res.size());
 
+    timer_elem.restart(parent->epoll_w.get_timer(), timeout);
     if (res.size() != count) {
         sock.set_on_read_write({}, [this] { process_write(); });
         ret = false;
@@ -71,7 +80,6 @@ dns_server::dns_server(epoll_wrapper &epoll_w, ipv4_endpoint const &local_endpoi
         , tp(4) {}
 
 void dns_server::on_new_connection() {
-    std::unique_ptr<connection> new_conn(new connection(this, ids.size()));
+    std::unique_ptr<connection> new_conn(new connection(this, ids++));
     connections.emplace(new_conn.get(), std::move(new_conn));
-    ids.push(new_conn.get());
 }
